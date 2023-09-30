@@ -8,7 +8,7 @@ CREATE TABLE Phone
     CHECK (
 
                 length(IMEI) == 15 and
-                IMEI REGEXP '^[0-9]*$' and
+                IMEI GLOB '^[0-9]*$' and
                 (
                         substr(IMEI, 1, 1) +
                         substr(IMEI, 3, 1) +

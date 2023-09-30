@@ -1,23 +1,22 @@
-import Constants
-import sqlite3
 import csv
 import random
+import sqlite3
 import string
-from faker import Faker
-from domain.Customer import Customer
-from domain.PhoneModel import PhoneModel
-from domain.Phone import Phone
-from domain.rentalContract import rentalContract
-from tools.imei import get_random_imei
-from tools.check_imei import check_imei
 
-conn = sqlite3.connect(Constants.database_name)
-cursor = conn.cursor()
+from faker import Faker
+
+import Constants
+from domain.Customer import Customer
+from domain.Phone import Phone
+from domain.PhoneModel import PhoneModel
+from domain.rentalContract import rentalContract
+from tools.imei import generate_imei
+
 fake = Faker()
 phone_models_list = []
 
 
-def customer_data():
+def customer_data(conn, cursor):
     customer_list = []
     for i in range(100):
         customer = Customer(i + 1, fake.name(), fake.email())
@@ -34,7 +33,7 @@ def customer_data():
 
 
 def read_phone_model():
-    with open('../tools/cleaned_all_phones.csv', 'r') as file:
+    with open('tools/cleaned_all_phones.csv', 'r') as file:
         reader = csv.DictReader(file)
         for row in reader:
             phone_model = PhoneModel(
@@ -48,7 +47,7 @@ def read_phone_model():
             phone_models_list.append(phone_model.__str__())
 
 
-def phone_model_data():
+def phone_model_data(conn, cursor):
     try:
         cursor.execute("DELETE FROM PhoneModel")
         cursor.executemany('''
@@ -72,12 +71,10 @@ def generate_color():
     return random_color
 
 
-def phone_data():
+def phone_data(conn, cursor):
     phone_list = []
     for x in phone_models_list:
-        imei = get_random_imei()
-        while not check_imei(imei):
-            imei = get_random_imei()
+        imei = generate_imei()
         phone = Phone(
             imei,
             x[0],
@@ -95,7 +92,7 @@ def phone_data():
         print('make up phone data failed: ', e)
 
 
-def rental_contract_data():
+def rental_contract_data(conn, cursor):
     cursor.execute('SELECT imei FROM Phone')
     imei_list = [row[0] for row in cursor.fetchall()]
     cursor.execute('SELECT customerId FROM Customer')
@@ -128,25 +125,13 @@ def rental_contract_data():
         print('make up rental contract data failed: ', e)
 
 
-def fake_one_customer_data():
-    print(1)
-
-
-def fake_one_phone_model_data():
-    print(1)
-
-
-def fake_one_phone_data():
-    print(1)
-
-
-def fake_one_rental_contract_data():
-    print(1)
-
-
 def fake_data():
-    customer_data()
+    conn = sqlite3.connect(Constants.database_name)
+    cursor = conn.cursor()
+    # fake
+    customer_data(conn, cursor)
     read_phone_model()
-    phone_model_data()
-    phone_data()
-    rental_contract_data()
+    phone_model_data(conn, cursor)
+    phone_data(conn, cursor)
+    rental_contract_data(conn, cursor)
+    conn.close()
