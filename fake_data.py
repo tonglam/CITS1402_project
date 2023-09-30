@@ -5,7 +5,7 @@ import string
 
 from faker import Faker
 
-import Constants
+import constants
 from domain.Customer import Customer
 from domain.Phone import Phone
 from domain.PhoneModel import PhoneModel
@@ -126,7 +126,7 @@ def rental_contract_data(conn, cursor):
 
 
 def fake_data():
-    conn = sqlite3.connect(Constants.database_name)
+    conn = sqlite3.connect(constants.database_name)
     cursor = conn.cursor()
     # fake
     customer_data(conn, cursor)
@@ -134,8 +134,8 @@ def fake_data():
     phone_model_data(conn, cursor)
     phone_data(conn, cursor)
     rental_contract_data(conn, cursor)
-    conn.close()
     cursor.close()
+    conn.close()
 
 
 if __name__ == '__main__':

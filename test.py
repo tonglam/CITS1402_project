@@ -1,10 +1,10 @@
-import Constants
 import sqlite3
 
+import constants
+from tools.imei import generate_imei
 
-def test_schema():
-    conn = sqlite3.connect(Constants.database_name)
-    cursor = conn.cursor()
+
+def check_schema(cursor):
     table_list = ["Phone", "PhoneModel", "rentalContract", "Customer"]
     # get basic data_type
     table_dict = {}
@@ -69,9 +69,95 @@ def test_schema():
                 assert row[4] == "customerId" or row[4] == "IMEI"
                 if row[2] == "Phone" and row[3] == "IMEI" and row[4] == "IMEI":
                     assert row[6] == "SET NULL"
-    conn.close()
+
+
+def check_primary_key(cursor):
+    # check Phone primary key
+    cursor.execute('SELECT * FROM Phone')
+    phone_list = cursor.fetchall()
+    phone_test = phone_list[14]
+    try:
+        cursor.execute('''
+                       INSERT INTO Phone (IMEI, modelNumber, modelName)
+                       VALUES (?, ?, ?)
+                   ''', phone_test)
+        raise Exception("test Phone primary key failed, same record should not be inserted")
+    except sqlite3.Error:
+        print('pass Phone primary key test')
+    # check PhoneModel primary key
+    cursor.execute('SELECT * FROM PhoneModel')
+    phone_model_list = cursor.fetchall()
+    phone_model_test = phone_model_list[14]
+    try:
+        cursor.execute('''
+                       INSERT INTO PhoneModel (modelNumber, modelName, storage, colour, baseCost, dailyCost)
+                       VALUES (?, ?, ?, ?, ?, ?)
+                   ''', phone_model_test)
+        raise Exception("test PhoneModel primary key failed, same record should not be inserted")
+    except sqlite3.Error:
+        print('pass PhoneModel primary key test')
+    # check rentalContract primary key
+    cursor.execute('SELECT * FROM rentalContract')
+    rental_contract_list = cursor.fetchall()
+    rental_contract_test = rental_contract_list[14]
+    try:
+        cursor.execute('''
+                       INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
+                       VALUES (?, ?, ?, ?, ?)
+                   ''', rental_contract_test)
+        raise Exception("test rentalContract primary key failed, same record should not be inserted")
+    except sqlite3.Error:
+        print('pass rentalContract primary key test')
+    # check Customer primary key
+    cursor.execute('SELECT * FROM Customer')
+    customer_list = cursor.fetchall()
+    customer_test = customer_list[14]
+    try:
+        cursor.execute('''
+                       INSERT INTO Customer (customerId, customerName, customerEmail)
+                       VALUES (?, ?, ?)
+                   ''', customer_test)
+        raise Exception("test Customer primary key failed, same record should not be inserted")
+    except sqlite3.Error:
+        print('pass Customer primary key test')
+
+
+def check_foreign_key(cursor):
+    # check Phone foreign key
+    cursor.execute('SELECT * FROM Phone')
+    phone_list = cursor.fetchall()
+    phone_test = (generate_imei(), '99' + phone_list[14][1], '99' + phone_list[14][2])
+    print(phone_test.__str__())
+    try:
+        cursor.execute('''
+                          INSERT INTO Phone (IMEI, modelNumber, modelName)
+                          VALUES (?, ?, ?)
+                      ''', phone_test)
+        raise Exception("test Phone foreign key failed, record should not be inserted")
+    except sqlite3.Error as e:
+        print('pass Phone foreign key test:' + str(e))
+
+
+def check_key_constraints(cursor):
+    pass
+
+
+def test_schema():
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    check_schema(cursor)
     cursor.close()
+    conn.close()
 
 
 def test_data():
-    print(1)
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    # check primary key
+    # check_primary_key(cursor)
+    # check foreign key
+    check_foreign_key(cursor)
+    # check key constraints
+    # check_key_constraints(cursor)
+    cursor.close()
+    conn.close()
