@@ -135,3 +135,8 @@ def fake_data():
     phone_data(conn, cursor)
     rental_contract_data(conn, cursor)
     conn.close()
+    cursor.close()
+
+
+if __name__ == '__main__':
+    fake_data()

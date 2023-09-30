@@ -29,6 +29,9 @@ def create_database():
         conn.commit()
     except sqlite3.Error as e:
         print('execute project sql files failed: ', e)
+    finally:
+        cursor.close()
+        conn.close()
 
 
 if __name__ == '__main__':
