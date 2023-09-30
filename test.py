@@ -123,6 +123,8 @@ def check_primary_key(cursor):
 
 
 def check_foreign_key(cursor):
+    # open foreign key setting, this will only active in the current connection
+    cursor.execute("PRAGMA foreign_keys = ON")
     # check Phone foreign key
     cursor.execute('SELECT * FROM Phone')
     phone_list = cursor.fetchall()

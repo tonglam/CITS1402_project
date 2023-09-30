@@ -25,15 +25,6 @@ def create_database():
             create_view = sql_file.read()
         cursor.executescript(create_view)
         conn.commit()
-        # open foreign key setting
-        foreign_key_setting = False
-        while not foreign_key_setting:
-            cursor.execute("PRAGMA foreign_keys = ON")
-            conn.commit()
-            cursor.execute("PRAGMA foreign_keys")
-            rows = cursor.fetchall()
-            if rows[0][0] == 1:
-                foreign_key_setting = True
     except sqlite3.Error as e:
         print('execute project sql files failed: ', e)
     finally:
