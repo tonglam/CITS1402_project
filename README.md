@@ -51,3 +51,18 @@ __Checklist__：
 
 
 # Step 5 - View
+
+
+# NOTE
+**超级无敌极品巨坑：**
+
+sqlite, version 3.6.19开始支持外键。
+
+**但是,**
+
+启用外键约束只能作用于当前连接，一旦断开连接，外键约束就会失效，所以每次连接数据库都要重新启用外键约束。
+
+```
+PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys;
+```
