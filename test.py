@@ -4,6 +4,7 @@ import sqlite3
 import constants
 from tools.imei import generate_imei
 from datetime import datetime, timedelta
+from domain.CustomerSummary import CustomerSummary
 
 
 def check_schema(conn, cursor):
@@ -73,6 +74,9 @@ def check_schema(conn, cursor):
                 assert row[3] == "customerId" or row[3] == "IMEI"
                 assert row[4] == "customerId" or row[4] == "IMEI"
                 if row[2] == "Phone" and row[3] == "IMEI" and row[4] == "IMEI":
+                    assert row[6] == "SET NULL"
+                # check ON_DELETE
+                if row[3] == "IMEI" and row[4] == "IMEI":
                     assert row[6] == "SET NULL"
 
 
@@ -291,55 +295,26 @@ def check_key_constraints(conn, cursor):
         print('pass Phone key constraints test 3:' + str(e))
 
 
-def test_schema():
-    conn = sqlite3.connect(constants.database_name)
-    cursor = conn.cursor()
-    check_schema(conn, cursor)
-    cursor.close()
-    conn.close()
-
-
-def test_data():
-    conn = sqlite3.connect(constants.database_name)
-    cursor = conn.cursor()
-    # check primary key
-    check_primary_key(conn. cursor)
-    # check foreign key
-    check_foreign_key(conn, cursor)
-    # check key constraints
-    check_key_constraints(conn, cursor)
-    cursor.close()
-    conn.close()
-
-
-def create_trigger_monitor(conn, cursor):
-    # create a trigger_monitor table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS trigger_monitor (
-            trigger_name TEXT,
-            trigger_time TEXT
-        )
-    ''')
+def check_trigger_exists(conn, cursor):
+    cursor.execute("SELECT count(1) FROM sqlite_master WHERE type='trigger' AND tbl_name = 'rentalContract' ")
     conn.commit()
-
-    # create a trigger_monitor trigger
-    cursor.execute('''
-        CREATE TRIGGER IF NOT EXISTS trigger_monitor
-        AFTER UPDATE ON rentalContract
-        BEGIN
-            INSERT INTO trigger_monitor (trigger_name, trigger_time)
-            VALUES ('trigger_monitor', datetime('now'));
-        END
-    ''')
-    conn.commit()
+    rows = cursor.fetchall()
+    # this program has set up a trigger for rentalContract table
+    assert rows[0][0] > 1, "trigger does not exist"
 
 
-def trigger_rental_cost(conn, cursor):
-    cursor.execute('SELECT * FROM rentalContract')
+def trigger_rental_cost(conn, cursor, number=1):
+    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NULL')
     rental_contract_list = cursor.fetchall()
-    customer_id = rental_contract_list[11][0]
-    imei = rental_contract_list[11][1]
-    date_out = rental_contract_list[11][2]
+    for i in range(number):
+        sample = random.sample(range(len(rental_contract_list)), number)[0]
+        trigger_rental_one_cost(conn, cursor, rental_contract_list[sample])
+
+
+def trigger_rental_one_cost(conn, cursor, rental_contract):
+    customer_id = rental_contract[0]
+    imei = rental_contract[1]
+    date_out = rental_contract[2]
     rent_day = random.randint(1, 100)
     date_back = (datetime.strptime(date_out, "%Y-%m-%d") + timedelta(days=rent_day)).strftime("%Y-%m-%d")
     trigger_test = (
@@ -353,16 +328,142 @@ def trigger_rental_cost(conn, cursor):
     cursor.execute("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND rentalCost IS NULL ",
                    (date_back, customer_id, imei))
     conn.commit()
+    # check result
+    check_trigger_result(conn, cursor)
+
+
+def check_trigger_result(conn, cursor):
+    # check trigger times
+    cursor.execute("SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL ")
+    conn.commit()
+    rental_list = cursor.fetchall()
+    rental_count = len(rental_list)
+    cursor.execute("SELECT count(1) FROM trigger_monitor ")
+    conn.commit()
+    monitor_count = cursor.fetchall()[0][0]
+    assert rental_count == monitor_count, "trigger times error, check the record manually to find out why"
+    # check trigger result
+    for x in rental_list:
+        imei = x[1]
+        rental_cost = x[4]
+        cursor.execute(
+            "SELECT b.baseCost, b.dailyCost FROM Phone a JOIN PhoneModel b USING (modelNumber, modelName) WHERE IMEI = ? ",
+            (imei,))
+        conn.commit()
+        rows = cursor.fetchall()
+        expect_rental_cost = rows[0][0] + rows[0][1] * (
+                datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days
+        assert rental_cost == expect_rental_cost, "trigger result error, expect rental cost is {}, actual rental cost is {}".format(
+            expect_rental_cost, rental_cost)
+
+
+def check_view(conn, cursor):
+    # select all valid rental contract records
+    cursor.execute("SELECT * FROM rentalContract WHERE dateBack IS NOT NULL ")
+    conn.commit()
+    summary_dict = {}
+    valid_list = []
+    for x in cursor.fetchall():
+        customer_id = x[0]
+        imei = x[1]
+        date_out = x[2]
+        date_back = x[3]
+        rental_cost = x[4]
+        # get model_name
+        cursor.execute("SELECT modelName FROM Phone WHERE imei = ? ", (imei,))
+        conn.commit()
+        model_name = cursor.fetchall()[0][0]
+        # calculate rent days
+        rent_days = (datetime.strptime(date_back, "%Y-%m-%d") - datetime.strptime(date_out, "%Y-%m-%d")).days
+        # get tax year
+        tax_year = get_tax_year(datetime.strptime(date_back, "%Y-%m-%d"))
+        # summary data
+        customer_summary = CustomerSummary(
+            customer_id,
+            model_name,
+            rent_days,
+            tax_year,
+            rental_cost,
+            date_back
+        )
+        valid_list.append(customer_summary)
+        key = str(customer_id) + '+' + model_name
+        summary_dict[key] = customer_summary
+    # get data from view
+    cursor.execute("SELECT * FROM customerSummary")
+    view_list = cursor.fetchall()
+    # check length
+    assert len(valid_list) == len(view_list), "view data error, check the record manually to find out why"
+    # check data
+    for x in view_list:
+        key = str(x[0]) + '+' + x[1]
+        summary = summary_dict[key]
+        print("view test data:{}".format(summary.__str__()))
+        assert summary.customerId == x[
+            0], "view data customerId error, key:[{}], check the record manually to find out why".format(key)
+        assert summary.modelName == x[
+            1], "view data modelName error, key:[{}], check the record manually to find out why".format(key)
+        assert summary.daysRented == x[
+            2], "view data days rented error, key:[{}], check the record manually to find out why".format(key)
+        assert summary.taxYear == x[
+            3], "view data taxYear error, key:[{}], check the record manually to find out why".format(key)
+        assert summary.rentalCost == x[
+            4], "view data rentalCost error, key:[{}], check the record manually to find out why".format(key)
+
+
+def get_tax_year(date):
+    year = date.year
+    month = date.month
+    if month < 7:
+        return "{}/{}".format(year - 1, str(year)[2:4])
+    else:
+        return "{}/{}".format(year, str(year + 1)[2:4])
+
+
+def test_schema():
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    check_schema(conn, cursor)
+    cursor.close()
+    conn.close()
+
+
+def test_data():
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    # check primary key
+    check_primary_key(conn, cursor)
+    # check foreign key
+    # check_foreign_key(conn, cursor)
+    # check key constraints
+    check_key_constraints(conn, cursor)
+    cursor.close()
+    conn.close()
 
 
 def test_trigger():
     conn = sqlite3.connect(constants.database_name)
     cursor = conn.cursor()
-    # create a trigger_monitor trigger and a trigger_monitor table
-    create_trigger_monitor(conn, cursor)
+    # check trigger exists
+    check_trigger_exists(conn, cursor)
     # trigger one record
     trigger_rental_cost(conn, cursor)
+    # trigger 50 records
+    trigger_rental_cost(conn, cursor, 10)
+    cursor.close()
+    conn.close()
 
 
 def test_view():
-    pass
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    check_view(conn, cursor)
+    cursor.close()
+    conn.close()
+
+
+def test():
+    test_schema()
+    test_data()
+    test_trigger()
+    # test_view()

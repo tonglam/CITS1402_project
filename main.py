@@ -1,8 +1,8 @@
 import constants
 import os
-import pytest
 from create_database import create_database
 from fake_data import fake_data
+from test import test
 
 
 def drop_database():
@@ -11,10 +11,11 @@ def drop_database():
 
 
 def main():
+    drop_database()
     create_database()
-    # fake_data()
-    # test()
+    fake_data()
+    test()
 
 
 if __name__ == '__main__':
-    create_database()
+    main()
