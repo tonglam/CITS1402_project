@@ -90,72 +90,89 @@ PRAGMA foreign_keys;
 ----
 # 1402-sqlite-project Test Usage Method
 
-Step 1 - Replace Files
-Replace the .sql files under the /sql folder with your own files.
+# Step 1 - Replace Files
 
-Step 2 - Create Database
-Execute the create_database() function in main.py. This step will execute all the creation DDL statements and check if the basic table structure, constraints, and indexes are correct. At the same time, it will generate the trigger_monitor table to monitor the execution status of triggers and create another trigger: trigger_monitor to monitor the execution status of triggers in the project.
+Replace the `.sql` files under the `/sql` folder with your own files.
 
-Checklist:
+# Step 2 - Create Database
 
-Successfully execute all .sql files without errors
-Create four tables: Phone, PhoneModel, rentalContract, Customer
-Check the basic table structure
-Phone table
-Three fields: IMEI(TEXT), modelNumber(TEXT), modelName(TEXT)
-Primary key: IMEI
-Foreign key: Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName)
-PhoneModel table
-Six fields: modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL)
-Primary key: modelNumber
-rentalContract table
-Five fields: customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
-Primary key: customerId + IMEI
-Foreign key: rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
-Customer table
-Three fields: customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
-Primary key: customerId
-Step 3 - Fake Data
-Execute the fake_data() function in main.py. This step will generate data and insert it into the four tables created in the previous step. The table constraints will be validated again.
+Execute the `create_database()` function in `main.py`. This step will execute all the creation DDL statements and check if the basic table structure, constraints, and indexes are correct. At the same time, it will generate the trigger_monitor table to monitor the execution status of triggers and create another trigger: trigger_monitor to monitor the execution status of triggers in the project.
 
-Checklist:
+__Checklist__:
 
-Check Primary Key
-Randomly select a record from the Phone table, reinsert it into the Phone table, and check if there are any errors.
-Randomly select a record from the PhoneModel table, reinsert it into the PhoneModel table, and check if there are any errors.
-Randomly select a record from the rentalContract table, reinsert it into the rentalContract table, and check if there are any errors.
-Randomly select a record from the Customer table, reinsert it into the Customer table, and check if there are any errors.
-Check Foreign Key
-Randomly select a record from the Phone table and modify its modelNumber to a value that does not exist in the PhoneModel table, and check if there are any errors.
-Randomly select a record from the Phone table and modify its modelName to a value that does not exist in the PhoneModel table, and check if there are any errors.
-Randomly select a record from the rentalContract table and modify its customerId to a value that does not exist in the Customer table, and check if there are any errors.
-Randomly select a record from the rentalContract table and modify its IMEI to a value that does not exist in the Phone table, and check if there are any errors.
-Check Check Constraint
-Randomly select a record from the Phone table and truncate its IMEI to the first 7 digits, and check if there are any errors.
-Randomly select a record from the Phone table and change the first 7 digits of its IMEI to random letters, and check if there are any errors.
-Randomly select a record from the Phone table and add 1 to its IMEI, and check if there are any errors.
-Step 4 - Trigger
-Execute the test_trigger() function in main.py. This step will verify if the triggers are correctly triggered and if the results of the updates are correct.
+1. Successfully execute all .sql files without errors
+2. Create four tables: Phone, PhoneModel, rentalContract, Customer
+3. Check the basic table structure 
+   - Phone table
+      - Three fields: IMEI(TEXT), modelNumber(TEXT), modelName(TEXT)
+      - Primary key: IMEI
+      - Foreign key: Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName)
+   - PhoneModel table
+      - Six fields: modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL)
+      - Primary key: modelNumber
+   - rentalContract table
+      - Five fields: customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
+      - Primary key: customerId + IMEI
+      - Foreign key: rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
+   - Customer table
+      - Three fields: customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
+      - Primary key: customerId
 
-Checklist:
+# Step 3 - Fake Data
 
-Check if the triggers are successfully created
-Update the data in the rentalContract table and check if the triggers are correctly triggered, both once and fifty times
-Modify the dateOut of a random record in the rentalContract table to a random value
-Check if the number of records in the trigger_monitor table is equal to the number of records in the rentalContract table where rentalCost is not null, i.e., check if the triggers are triggered and the number of trigger executions is correct
-Check if renContract.rentalCost is correctly updatedfields in the view can be made unique. In this program, the customerId + modelName is used as a workaround, so if there are any issues, you can start troubleshooting from here.
+Execute the `fake_data()` function in `main.py`. This step will generate data and insert it into the four tables created in the previous step. The table constraints will be validated again.
 
-Checklist:
+__Checklist__:
 
-Check if the view is successfully created
-Check if the number of views is equal to the number of valid data
-Check if each data in the view is calculated correctly
+1. Check Primary Key
+   - Randomly select a record from the Phone table, reinsert it into the Phone table, and check if there are any errors.
+   - Randomly select a record from the PhoneModel table, reinsert it into the PhoneModel table, and check if there are any errors.
+   - Randomly select a record from the rentalContract table, reinsert it into the rentalContract table, and check if there are any errors.
+   - Randomly select a record from the Customer table, reinsert it into the Customer table, and check if there are any errors.
+2. Check Foreign Key
+   - Randomly select a record from the Phone table and modify its modelNumber to a value that does not exist in the PhoneModel table, and check if there are any errors. 
+   - Randomly select a record from the Phone table and modify its modelName to a value that does not exist in the PhoneModel table, and check if there are any errors. 
+   - Randomly select a record from the rentalContract table and modify its customerId to a value that does not exist in the Customer table, and check if there are any errors. 
+   - Randomly select a record from the rentalContract table and modify its IMEI to a value that does not exist in the Phone table, and check if there are any errors.
+3. Check 'Check Constraint'
+   - Randomly select a record from the Phone table and truncate its IMEI to the first 7 digits, and check if there are any errors.
+   - Randomly select a record from the Phone table and change the first 7 digits of its IMEI to random letters, and check if there are any errors.
+   - Randomly select a record from the Phone table and add 1 to its IMEI, and check if there are any errors.
 
-NOTE
-Super-duper mega pitfall:
+# Step 4 - Trigger
 
-Starting from sqlite version 3.6.19, foreign key constraints are supported.
+Execute the `test_trigger()` function in `main.py`. This step will verify if the triggers are correctly triggered and if the results of the updates are correct.
 
-However,
+__Checklist__:
 
-Enabling foreign key constraints only applies to the current connection. Once the connection is disconnected, the foreign key constraints will be disabled. Therefore, the foreign key constraints need to be re-enabled every time the database is connected.
+1. Check if the trigger was created successfully
+2. Update the data in the rentalContract table and check if the trigger was triggered correctly, once and fifty times respectively.
+   - Randomize the data in the rentalContract table by changing the dateOut to a random value.
+   - Check whether the number of records in the trigger_monitor table and the number of records in the rentalContract table with non-null rentalCost are equal, i.e., whether the trigger is triggered and the number of times the trigger is triggered is correct.
+   - Check if renContract.rentalCost is updated correctly.
+
+# Step 5 - View
+
+Execute the `test_view()` function in `main.py` to verify that the view data is correct.
+There is a dark mine here, none of the fields of view can be made UNIQUE, this program uses customerId + modelName to gamble on its life, you can start looking here if you have problems.
+
+__Checklist__:
+
+1. check if the view is created successfully
+2. check if the number of views is equal to the number of valid data.
+3. check if each data of the view is calculated correctly.
+
+# NOTE
+
+**SUPER INCREDIBLE EXTREMELY HUGE PIT: **
+
+sqlite, version 3.6.19 started to support foreign keys.
+
+**But,**
+
+Enabling foreign key constraints only works for the current connection, once you disconnect, the foreign key constraints will be invalidated, so you have to re-enable the foreign key constraints every time you connect to the database.
+
+```
+PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys;
+```
