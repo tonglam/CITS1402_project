@@ -55,7 +55,3 @@ def create_trigger_monitor(conn, cursor):
         END
     ''')
     conn.commit()
-
-
-if __name__ == '__main__':
-    create_database()

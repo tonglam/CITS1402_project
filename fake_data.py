@@ -136,7 +136,3 @@ def fake_data():
     rental_contract_data(conn, cursor)
     cursor.close()
     conn.close()
-
-
-if __name__ == '__main__':
-    fake_data()

@@ -1,5 +1,6 @@
 import random
 import sqlite3
+import pytest
 
 import constants
 from tools.imei import generate_imei
@@ -141,8 +142,15 @@ def check_primary_key(conn, cursor):
 
 def check_foreign_key(conn, cursor):
     # open foreign key setting, this will only be activated in the current connection
-    cursor.execute("PRAGMA foreign_keys = ON")
-    conn.commit()
+    foreign_key_flag = False
+    while not foreign_key_flag:
+        cursor.execute("PRAGMA foreign_keys")
+        conn.commit()
+        if cursor.fetchall()[0][0]:
+            foreign_key_flag = True
+        else:
+            cursor.execute("PRAGMA foreign_keys = ON")
+            conn.commit()
     # check Phone foreign key
     cursor.execute('SELECT * FROM Phone')
     conn.commit()
@@ -434,7 +442,7 @@ def test_data():
     # check primary key
     check_primary_key(conn, cursor)
     # check foreign key
-    # check_foreign_key(conn, cursor)
+    check_foreign_key(conn, cursor)
     # check key constraints
     check_key_constraints(conn, cursor)
     cursor.close()
@@ -463,7 +471,10 @@ def test_view():
 
 
 def test():
+    print('\nstart 1402 project test\n')
     test_schema()
     test_data()
     test_trigger()
-    # test_view()
+    test_view()
+    print('\nCongratulations!!!!\n')
+    print('pass 1402 project test\n')
