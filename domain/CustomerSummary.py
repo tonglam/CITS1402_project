@@ -1,14 +1,17 @@
 class CustomerSummary:
-    def __init__(self, customerId, modelName, daysRented, taxYear, rentalCost, dateBack):
+    def __init__(self, customerId, modelName, dateOut, dateBack, daysRented, taxYear, rentalCost):
         self.customerId = customerId
         self.modelName = modelName
+        self.dateOut = dateOut
+        self.dateBack = dateBack
         self.daysRented = daysRented
         self.taxYear = taxYear
         self.rentalCost = rentalCost
-        self.dateBack = dateBack
 
     def __str__(self):
-        return self.customerId, self.modelName, self.daysRented, self.taxYear, self.rentalCost, self.dateBack
+        return ("customerId:{}, modelName:{}, dateOut:{}, dateBack:{}, daysRented:{}, taxYear:{}, rentalCost:{}"
+                .format(self.customerId, self.modelName, self.dateOut, self.dateBack, self.daysRented, self.taxYear,
+                        self.rentalCost))
 
     def getCustomerId(self):
         return self.customerId
@@ -21,6 +24,18 @@ class CustomerSummary:
 
     def setModelName(self, modelName):
         self.modelName = modelName
+
+    def getDateOut(self):
+        return self.dateOut
+
+    def setDateOut(self, dateOut):
+        self.dateOut = dateOut
+
+    def getDateBack(self):
+        return self.dateBack
+
+    def setDateBack(self, dateBack):
+        self.dateBack = dateBack
 
     def getDaysRented(self):
         return self.daysRented
@@ -39,9 +54,3 @@ class CustomerSummary:
 
     def setRentalCost(self, rentalCost):
         self.rentalCost = rentalCost
-
-    def getDateBack(self):
-        return self.dateBack
-
-    def setDateBack(self, dateBack):
-        self.dateBack = dateBack

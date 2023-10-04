@@ -55,3 +55,24 @@ def create_trigger_monitor(conn, cursor):
         END
     ''')
     conn.commit()
+    # create a customer_summary_breakdown view
+    cursor.execute("DROP VIEW IF EXISTS CustomerSummaryBreakdown")
+    cursor.execute('''
+        CREATE VIEW CustomerSummaryBreakDown AS
+        SELECT
+        a.customerId,
+        c.modelName,
+        julianday(a.dateBack) - julianday(a.dateOut) as daysRented,
+       CASE
+           WHEN strftime('%m-%d', a.dateBack) < '07-01' THEN strftime('%Y', a.dateBack, '-1 year') || '/' ||
+                                                             substr(strftime('%Y', a.dateBack), 3)
+           ELSE strftime('%Y', a.dateBack) || '/' || substr(strftime('%Y', a.dateBack, '+1 year'), 3)
+           END                                      as taxYear,
+       a.rentalCost                            as rentalCost
+       FROM rentalContract a
+       JOIN Phone b USING (IMEI)
+       JOIN PhoneModel c USING (modelNumber)
+       WHERE a.dateBack IS NOT NULL
+       ORDER BY a.customerId, c.modelName, taxYear;
+    ''')
+    conn.commit()

@@ -36,18 +36,21 @@ def read_phone_model():
     with open('tools/cleaned_all_phones.csv', 'r') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            phone_model = PhoneModel(
-                generate_model_number(),
-                row['phone_name'] + row['brand'],
-                row['storage(GB)'],
-                generate_color(),
-                row['price(USD)'],
-                round(float(row['price(USD)']) / 365, 2)
-            )
-            phone_models_list.append(phone_model.__str__())
+            times = random.randint(1, 5)
+            for i in range(times):
+                phone_model = PhoneModel(
+                    generate_model_number(),
+                    row['phone_name'] + row['brand'],
+                    row['storage(GB)'],
+                    generate_color(),
+                    row['price(USD)'],
+                    round(float(row['price(USD)']) / 365, 2)
+                )
+                phone_models_list.append(phone_model.__str__())
+    return phone_models_list
 
 
-def phone_model_data(conn, cursor):
+def phone_model_data(conn, cursor, phone_models_list):
     try:
         cursor.execute("DELETE FROM PhoneModel")
         cursor.executemany('''
@@ -74,17 +77,19 @@ def generate_color():
 def phone_data(conn, cursor):
     phone_list = []
     for x in phone_models_list:
-        imei = generate_imei()
-        phone = Phone(
-            imei,
-            x[0],
-            x[1]
-        )
-        phone_list.append(phone.__str__())
+        times = random.randint(1, 10)
+        for i in range(times):
+            imei = generate_imei()
+            phone = Phone(
+                x[0],
+                x[1],
+                imei
+            )
+            phone_list.append(phone.__str__())
     try:
         cursor.execute("DELETE FROM Phone")
         cursor.executemany('''
-            INSERT INTO Phone (IMEI, modelNumber, modelName)
+            INSERT INTO Phone (modelNumber, modelName, IMEI)
             VALUES (?, ?, ?)
         ''', phone_list)
         conn.commit()
@@ -96,13 +101,14 @@ def rental_contract_data(conn, cursor):
     cursor.execute('SELECT imei FROM Phone')
     imei_list = [row[0] for row in cursor.fetchall()]
     cursor.execute('SELECT customerId FROM Customer')
+    conn.commit()
     customer_list = [row[0] for row in cursor.fetchall()]
     rental_contract_list = []
     ket_set = set()
     for i in range(500):
         customer_id = random.choice(customer_list)
         imei = random.choice(imei_list)
-        key = str(customer_id) + imei
+        key = str(customer_id) + "+" + imei
         if key in ket_set:
             continue
         ket_set.add(key)
@@ -114,6 +120,31 @@ def rental_contract_data(conn, cursor):
             None
         )
         rental_contract_list.append(rental_contract.__str__())
+    for x in range(10):
+        sample_index = random.randint(0, len(rental_contract_list) - 1)
+        sample_rental_contract = rental_contract_list[sample_index]
+        sample_customer_id = sample_rental_contract[0]
+        sample_imei = sample_rental_contract[1]
+        cursor.execute("SELECT * FROM Phone WHERE IMEI = ?", (sample_imei,))
+        conn.commit()
+        sample_phone = cursor.fetchone()
+        model_name = sample_phone[1]
+        cursor.execute("SELECT IMEI FROM Phone WHERE modelName = ? AND IMEI != ?", (model_name, sample_imei))
+        conn.commit()
+        other_imei_list = [row[0] for row in cursor.fetchall()]
+        for other in other_imei_list:
+            key = str(sample_customer_id) + "+" + other
+            if key in ket_set:
+                continue
+            ket_set.add(key)
+            rental_contract = rentalContract(
+                sample_customer_id,
+                other,
+                fake.date_between(start_date='-1y', end_date='today'),
+                None,
+                None
+            )
+            rental_contract_list.append(rental_contract.__str__())
     try:
         cursor.execute("DELETE FROM rentalContract")
         cursor.executemany('''
@@ -130,8 +161,8 @@ def fake_data():
     cursor = conn.cursor()
     # fake
     customer_data(conn, cursor)
-    read_phone_model()
-    phone_model_data(conn, cursor)
+    phone_models_list = read_phone_model()
+    phone_model_data(conn, cursor, phone_models_list)
     phone_data(conn, cursor)
     rental_contract_data(conn, cursor)
     cursor.close()

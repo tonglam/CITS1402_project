@@ -89,7 +89,7 @@ def check_primary_key(conn, cursor):
     phone_test = phone_list[14]
     try:
         cursor.execute('''
-                       INSERT INTO Phone (IMEI, modelNumber, modelName)
+                       INSERT INTO Phone (modelNumber, modelName, IMEI)
                        VALUES (?, ?, ?)
                    ''', phone_test)
         conn.commit()
@@ -157,11 +157,11 @@ def check_foreign_key(conn, cursor):
     phone_list = cursor.fetchall()
     new_imei = generate_imei()
 
-    phone_test = (new_imei, '99' + phone_list[14][1], phone_list[14][2])
+    phone_test = ('99' + phone_list[14][0], phone_list[14][1], new_imei)
     print("Phone foreign key test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                          INSERT INTO Phone (IMEI, modelNumber, modelName)
+                          INSERT INTO Phone (modelNumber, modelName, IMEI)
                           VALUES (?, ?, ?)
                       ''', phone_test)
         conn.commit()
@@ -169,11 +169,11 @@ def check_foreign_key(conn, cursor):
     except sqlite3.Error as e:
         print('pass Phone foreign key test 1:' + str(e))
 
-    phone_test = (new_imei, phone_list[14][1], '99' + phone_list[14][2])
+    phone_test = (phone_list[14][0], '99' + phone_list[14][1], new_imei)
     print("Phone foreign key test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                         INSERT INTO Phone (IMEI, modelNumber, modelName)
+                         INSERT INTO Phone (modelNumber, modelName, IMEI)
                          VALUES (?, ?, ?)
                      ''', phone_test)
         conn.commit()
@@ -181,11 +181,11 @@ def check_foreign_key(conn, cursor):
     except sqlite3.Error as e:
         print('pass Phone foreign key test 2:' + str(e))
 
-    phone_test = (new_imei, '99' + phone_list[14][1], '99' + phone_list[14][2])
+    phone_test = ('99' + phone_list[14][0], '99' + phone_list[14][1], new_imei)
     print("Phone foreign key test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                        INSERT INTO Phone (IMEI, modelNumber, modelName)
+                        INSERT INTO Phone (modelNumber, modelName, IMEI)
                         VALUES (?, ?, ?)
                     ''', phone_test)
         conn.commit()
@@ -258,15 +258,15 @@ def check_key_constraints(conn, cursor):
     cursor.execute('SELECT * FROM Phone')
     conn.commit()
     phone_list = cursor.fetchall()
-    imei = phone_list[7][0]
+    imei = phone_list[7][2]
 
     # length of IMEI should be 15
     new_imei = imei[0:7]
-    phone_test = (new_imei, phone_list[7][1], phone_list[7][2])
+    phone_test = (phone_list[7][0], phone_list[7][1], new_imei)
     print("Phone key constraints test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                       INSERT INTO Phone (IMEI, modelNumber, modelName)
+                       INSERT INTO Phone (modelNumber, modelName, IMEI)
                        VALUES (?, ?, ?)
                        ''', phone_test)
         conn.commit()
@@ -276,11 +276,11 @@ def check_key_constraints(conn, cursor):
 
     # IMEI should be all digits
     new_imei = imei[0:14] + 'A'
-    phone_test = (new_imei, phone_list[7][1], phone_list[7][2])
+    phone_test = (phone_list[7][0], phone_list[7][1], new_imei)
     print("Phone key constraints test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                           INSERT INTO Phone (IMEI, modelNumber, modelName)
+                           INSERT INTO Phone (modelNumber, modelName, IMEI)
                            VALUES (?, ?, ?)
                            ''', phone_test)
         conn.commit()
@@ -290,11 +290,11 @@ def check_key_constraints(conn, cursor):
 
     # IMEI should be meet the validation
     new_imei = str(int(imei) - 1)
-    phone_test = (new_imei, phone_list[7][1], phone_list[7][2])
+    phone_test = (phone_list[7][0], phone_list[7][1], new_imei)
     print("Phone key constraints test data:{}".format(phone_test.__str__()))
     try:
         cursor.execute('''
-                              INSERT INTO Phone (IMEI, modelNumber, modelName)
+                              INSERT INTO Phone (modelNumber, modelName, IMEI)
                               VALUES (?, ?, ?)
                               ''', phone_test)
         conn.commit()
@@ -365,22 +365,58 @@ def check_trigger_result(conn, cursor):
             expect_rental_cost, rental_cost)
 
 
+def trigger_duplicate_rental_cost(conn, cursor):
+    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL')
+    conn.commit()
+    rental_contract_all_list = cursor.fetchall()
+    rental_contract_key_set = set([str(x[0]) + "+" + x[1] for x in rental_contract_all_list])
+    sample_index = random.sample(range(len(rental_contract_all_list)), 30)
+    rental_contract_list = [rental_contract_all_list[x] for x in sample_index]
+    duplicate_list = []
+    for rental_contract in rental_contract_list:
+        # duplicate times
+        customer_id = rental_contract[0]
+        imei = rental_contract[1]
+        date_out = rental_contract[2]
+        duplicate_times = random.randint(1, 10)
+        for i in range(duplicate_times):
+            key = str(customer_id) + "+" + imei
+            if key in rental_contract_key_set:
+                continue
+            duplicate_list.append((customer_id, imei, date_out, None, None))
+    # insert
+    cursor.executemany('''
+                       INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
+                       VALUES (?, ?, ?, ?, ?)
+                   ''', duplicate_list)
+    conn.commit()
+    # update
+    for x in duplicate_list:
+        customer_id = x[0]
+        imei = x[1]
+        date_out = x[2]
+        rent_day = random.randint(1, 100)
+        date_back = (datetime.strptime(date_out, "%Y-%m-%d") + timedelta(days=rent_day)).strftime("%Y-%m-%d")
+        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ?",
+                      (date_back, customer_id, imei))
+        conn.commit()
+
+
 def check_view(conn, cursor):
     # select all valid rental contract records
-    cursor.execute("SELECT * FROM rentalContract WHERE dateBack IS NOT NULL ")
+    cursor.execute('''
+                    SELECT a.*, b.modelName FROM rentalContract a, Phone b 
+                    WHERE a.IMEI = b.IMEI AND a.dateBack IS NOT NULL
+                    ''')
     conn.commit()
     summary_dict = {}
     valid_list = []
     for x in cursor.fetchall():
         customer_id = x[0]
-        imei = x[1]
         date_out = x[2]
         date_back = x[3]
         rental_cost = x[4]
-        # get model_name
-        cursor.execute("SELECT modelName FROM Phone WHERE imei = ? ", (imei,))
-        conn.commit()
-        model_name = cursor.fetchall()[0][0]
+        model_name = x[5]
         # calculate rent days
         rent_days = (datetime.strptime(date_back, "%Y-%m-%d") - datetime.strptime(date_out, "%Y-%m-%d")).days
         # get tax year
@@ -389,22 +425,37 @@ def check_view(conn, cursor):
         customer_summary = CustomerSummary(
             customer_id,
             model_name,
+            date_out,
+            date_back,
             rent_days,
             tax_year,
-            rental_cost,
-            date_back
+            rental_cost
         )
         valid_list.append(customer_summary)
-        key = str(customer_id) + '+' + model_name
-        summary_dict[key] = customer_summary
+    for x in valid_list:
+        key = str(x.customerId) + '+' + x.modelName + "+" + x.taxYear
+        if key in summary_dict:
+            old = summary_dict[key]
+            new = CustomerSummary(
+                x.customerId,
+                x.modelName,
+                x.dateOut,
+                x.dateBack,
+                old.daysRented + x.daysRented,
+                x.taxYear,
+                old.rentalCost + x.rentalCost
+            )
+            summary_dict[key] = new
+        else:
+            summary_dict[key] = x
     # get data from view
     cursor.execute("SELECT * FROM customerSummary")
     view_list = cursor.fetchall()
     # check length
-    assert len(valid_list) == len(view_list), "view data error, check the record manually to find out why"
+    assert len(summary_dict) == len(view_list), "view data error, check the record manually to find out why"
     # check data
     for x in view_list:
-        key = str(x[0]) + '+' + x[1]
+        key = str(x[0]) + '+' + x[1] + '+' + x[3]
         summary = summary_dict[key]
         print("view test data:{}".format(summary.__str__()))
         assert summary.customerId == x[
@@ -457,7 +508,9 @@ def test_trigger():
     # trigger one record
     trigger_rental_cost(conn, cursor)
     # trigger 50 records
-    trigger_rental_cost(conn, cursor, 10)
+    trigger_rental_cost(conn, cursor, 50)
+    # trigger duplicate records
+    trigger_duplicate_rental_cost(conn, cursor)
     cursor.close()
     conn.close()
 
