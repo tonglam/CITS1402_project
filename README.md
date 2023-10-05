@@ -11,23 +11,23 @@
 
 __Checklist__：
 
-1. 成功执行所有`.sql`文件无报错
-2. 创建四个表：Phone, PhoneModel, rentalContract, Customer
+1. 成功执行所有`.sql`文件无报错。
+2. 创建四个表：Phone, PhoneModel, rentalContract, Customer。
 3. 检查基本表结构
     - Phone表
-        - 三个字段：IMEI(TEXT), modelNumber(TEXT), modelName(TEXT)
-        - 主键：IMEI
-        - 外键：Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName)
+        - 三个字段：IMEI(TEXT), modelNumber(TEXT), modelName(TEXT)。
+        - 主键：IMEI。
+        - 外键：Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName)。
     - PhoneModel表
-        - 六个字段：modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL)
-        - 主键：modelNumber
+        - 六个字段：modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL)。
+        - 主键：modelNumber。
     - rentalContract表
-        - 五个字段：customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
-        - 主键：customerId + IMEI + dateOut
-        - 外键：rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
+        - 五个字段：customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)。
+        - 主键：customerId + IMEI + dateOut。
+        - 外键：rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI。
     - Customer表
-        - 三个字段：customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
-        - 主键：customerId
+        - 三个字段：customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)。
+        - 主键：customerId。
 
 # Step 3 - Fake Data
 
@@ -36,19 +36,19 @@ __Checklist__：
 __Checklist__：
 
 1. 检查Primary Key
-    - 随机从Phone表取一条数据，重新插入Phone表，检查是否报错
-    - 随机从PhoneModel表取一条数据，重新插入PhoneModel表，检查是否报错
-    - 随机从rentalContract表取一条数据，重新插入rentalContract表，检查是否报错
-    - 随机从Customer表取一条数据，重新插入Customer表，检查是否报错
+    - 随机从Phone表取一条数据，重新插入Phone表，检查是否报错。
+    - 随机从PhoneModel表取一条数据，重新插入PhoneModel表，检查是否报错。
+    - 随机从rentalContract表取一条数据，重新插入rentalContract表，检查是否报错。
+    - 随机从Customer表取一条数据，重新插入Customer表，检查是否报错。
 2. 检查Foreign Key
-    - 随机从Phone表取一条数据，将其modelNumber修改为PhoneModel表不存在的值，检查是否报错
-    - 随机从Phone表取一条数据，将其modelName修改为PhoneModel表不存在的值，检查是否报错
-    - 随机从rentalContract表取一条数据，将其customerId修改为Customer表不存在的值，检查是否报错
-    - 随机从rentalContract表取一条数据，将其IMEI修改为Phone表不存在的值，检查是否报错
+    - 随机从Phone表取一条数据，将其modelNumber修改为PhoneModel表不存在的值，检查是否报错。
+    - 随机从Phone表取一条数据，将其modelName修改为PhoneModel表不存在的值，检查是否报错。
+    - 随机从rentalContract表取一条数据，将其customerId修改为Customer表不存在的值，检查是否报错。
+    - 随机从rentalContract表取一条数据，将其IMEI修改为Phone表不存在的值，检查是否报错。
 3. 检查Check约束
-    - 随机从Phone表取一条数据，将其IMEI截取前7位，检查是否报错
-    - 随机从Phone表取一条数据，将其IMEI截取前7位改为随机字母，检查是否报错
-    - 随机从Phone表取一条数据，将其IMEI加1，检查是否报错
+    - 随机从Phone表取一条数据，将其IMEI截取前7位，检查是否报错。
+    - 随机从Phone表取一条数据，将其IMEI截取前7位改为随机字母，检查是否报错。
+    - 随机从Phone表取一条数据，将其IMEI加1，检查是否报错。
 
 # Step 4 - Trigger
 
@@ -57,10 +57,10 @@ __Checklist__：
 __Checklist__：
 
 1. 检查trigger是否建立成功
-2. 更新rentalContract表中的数据，检查trigger是否正确触发，分别触发一次和五十次
-    - 随机rentalContract表中的数据，将dateOut修改为随机值
-    - 检查trigger_monitor表中的数据属和rentalContract表中rentalCost不为空记录数是否相等，即trigger是否触发和触发次数是否正确
-    - 检查renContract.rentalCost是否正确更新
+2. 更新rentalContract表中的数据，检查trigger是否正确触发，分别触发一次和五十次。
+    - 随机rentalContract表中的数据，将dateOut修改为随机值。
+    - 检查trigger_monitor表中的数据属和rentalContract表中rentalCost不为空记录数是否相等，即trigger是否触发和触发次数是否正确。
+    - 检查renContract.rentalCost是否正确更新。
 
 # Step 5 - View
 
@@ -69,9 +69,14 @@ __Checklist__：
 
 __Checklist__：
 
-1. 检查view是否建立成功
-2. 检查view数量是否等于有效数据数量
-3. 检查view每条数据计算是否正确
+1. 检查view是否建立成功。
+2. 检查view数量是否等于有效数据数量。
+3. 检查view每条数据计算是否正确。
+4. 将部分Phone.IMEI更新为NULL，重新检查view数量是否等于有效数据数量以及检查view每条数据计算是否正确。
+
+# PS
+
+`main.py`中的`main()`函数继承了所有需要执行的子函数，可以直接用`maain()`函数测试。
 
 # NOTE
 
@@ -100,23 +105,23 @@ Execute the `create_database()` function in `main.py`. This step will execute al
 
 __Checklist__:
 
-1. Successfully execute all .sql files without errors
-2. Create four tables: Phone, PhoneModel, rentalContract, Customer
+1. Successfully execute all .sql files without errors.
+2. Create four tables: Phone, PhoneModel, rentalContract, Customer.
 3. Check the basic table structure 
    - Phone table
-      - Three fields: IMEI(TEXT), modelNumber(TEXT), modelName(TEXT)
-      - Primary key: IMEI
-      - Foreign key: Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName)
+      - Three fields: IMEI(TEXT), modelNumber(TEXT), modelName(TEXT).
+      - Primary key: IMEI.
+      - Foreign key: Phone.(modelNumber + modelName) -> PhoneModel.(modelNumber + modelName).
    - PhoneModel table
-      - Six fields: modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL)
-      - Primary key: modelNumber
+      - Six fields: modelNumber(TEXT), modelName(TEXT), storage(INTEGER), colour(TEXT), baseCost(REAL), dailyCost(REAL).
+      - Primary key: modelNumber.
    - rentalContract table
-      - Five fields: customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
-      - Primary key: customerId + IMEI + dateOut
-      - Foreign key: rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
+      - Five fields: customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real).
+      - Primary key: customerId + IMEI + dateOut.
+      - Foreign key: rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI.
    - Customer table
-      - Three fields: customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
-      - Primary key: customerId
+      - Three fields: customerId(INTEGER), customerName(TEXT), customerEmail(TEXT).
+      - Primary key: customerId.
 
 # Step 3 - Fake Data
 
@@ -158,9 +163,14 @@ There is a dark mine here, none of the fields of view can be made UNIQUE, this p
 
 __Checklist__:
 
-1. check if the view is created successfully
+1. check if the view is created successfully.
 2. check if the number of views is equal to the number of valid data.
 3. check if each data of the view is calculated correctly.
+4. Update some Phone.IMEI to NULL, recheck if the view count is equal to the valid data count and verify if the calculation for each data in the view is correct.
+
+# PS
+
+The `main()` function in `main.py` inherits all the necessary sub-functions to be executed, so you can directly use the `main()` function for testing.
 
 # NOTE
 
