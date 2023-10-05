@@ -18,4 +18,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    for i in range(500):
+        main()

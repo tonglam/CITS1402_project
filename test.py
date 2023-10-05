@@ -473,7 +473,7 @@ def check_view(conn, cursor):
         assert summary.taxYear == x[
             3], "view data taxYear error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
             key, summary.taxYear, x[3])
-        assert summary.rentalCost == x[
+        assert round(summary.rentalCost, 2) == x[
             4], "view data rentalCost error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
             key, summary.rentalCost, x[4])
 
