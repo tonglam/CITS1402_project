@@ -49,7 +49,7 @@ def check_schema(conn, cursor):
                 assert row[5] == 1
             elif table == "PhoneModel" and col_name == "modelNumber":
                 assert row[5] == 1
-            elif table == "rentalContract" and (col_name == "customerId" or col_name == "IMEI"):
+            elif table == "rentalContract" and (col_name == "customerId" or col_name == "IMEI" or col_name == "dateOut"):
                 assert row[5] > 0
             elif table == "Customer" and col_name == "customerId":
                 assert row[5] == 1

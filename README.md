@@ -23,7 +23,7 @@ __Checklist__：
         - 主键：modelNumber
     - rentalContract表
         - 五个字段：customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
-        - 主键：customerId + IMEI
+        - 主键：customerId + IMEI + dateOut
         - 外键：rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
     - Customer表
         - 三个字段：customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
@@ -112,7 +112,7 @@ __Checklist__:
       - Primary key: modelNumber
    - rentalContract table
       - Five fields: customerId(INTEGER), IMEI(TEXT), dateOut(TEXT), dateBack(TEXT), rentalCost(Real)
-      - Primary key: customerId + IMEI
+      - Primary key: customerId + IMEI + dateOut
       - Foreign key: rentalContract.customerID -> Customer.customerID, rentalContract.IMEI -> Phone.IMEI
    - Customer table
       - Three fields: customerId(INTEGER), customerName(TEXT), customerEmail(TEXT)
