@@ -360,8 +360,8 @@ def check_trigger_result(conn, cursor):
             (imei,))
         conn.commit()
         rows = cursor.fetchall()
-        expect_rental_cost = rows[0][0] + rows[0][1] * (
-                (datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days + 1)
+        expect_rental_cost = round(rows[0][0] + rows[0][1] * (
+                (datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days + 1), 2)
         assert rental_cost == expect_rental_cost, "trigger result error, expect rental cost is {}, actual rental cost is {}".format(
             expect_rental_cost, rental_cost)
 
@@ -444,7 +444,7 @@ def check_view(conn, cursor):
                 x.dateBack,
                 old.daysRented + x.daysRented,
                 x.taxYear,
-                old.rentalCost + x.rentalCost
+                (old.rentalCost * 100 + x.rentalCost * 100) / 100
             )
             summary_dict[key] = new
         else:
@@ -453,22 +453,29 @@ def check_view(conn, cursor):
     cursor.execute("SELECT * FROM customerSummary")
     view_list = cursor.fetchall()
     # check length
-    assert len(summary_dict) == len(view_list), "view data error, check the record manually to find out why"
+    assert len(summary_dict) == len(
+        view_list), "view data error, expected len:[{}], actual len:[{}], check the record manually to find out why".format(
+        len(summary_dict), len(view_list))
     # check data
     for x in view_list:
         key = str(x[0]) + '+' + x[1] + '+' + x[3]
         summary = summary_dict[key]
         print("view test data:{}".format(summary.__str__()))
         assert summary.customerId == x[
-            0], "view data customerId error, key:[{}], check the record manually to find out why".format(key)
+            0], "view data customerId error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.customerId, x[0])
         assert summary.modelName == x[
-            1], "view data modelName error, key:[{}], check the record manually to find out why".format(key)
+            1], "view data modelName error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.modelName, x[1])
         assert summary.daysRented == x[
-            2], "view data days rented error, key:[{}], check the record manually to find out why".format(key)
+            2], "view data days rented error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.daysRented, x[2])
         assert summary.taxYear == x[
-            3], "view data taxYear error, key:[{}], check the record manually to find out why".format(key)
+            3], "view data taxYear error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.taxYear, x[3])
         assert summary.rentalCost == x[
-            4], "view data rentalCost error, key:[{}], check the record manually to find out why".format(key)
+            4], "view data rentalCost error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.rentalCost, x[4])
 
 
 def get_tax_year(date):

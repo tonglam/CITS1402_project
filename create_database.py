@@ -62,6 +62,9 @@ def create_trigger_monitor(conn, cursor):
         SELECT
         a.customerId,
         c.modelName,
+        a.dateOut,
+        a.dateBack,
+        julianday(a.dateBack) - julianday(a.dateOut) as julianday,
         julianday(a.dateBack) - julianday(a.dateOut) + 1 as daysRented,
        CASE
            WHEN strftime('%m-%d', a.dateBack) < '07-01' THEN strftime('%Y', a.dateBack, '-1 year') || '/' ||
