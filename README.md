@@ -74,6 +74,10 @@ __Checklist__：
 3. 检查view每条数据计算是否正确。
 4. 将部分Phone.IMEI更新为NULL，重新检查view数量是否等于有效数据数量以及检查view每条数据计算是否正确。
 
+# PS
+
+`main.py()`中的`main()`函数继承了所有需要执行的子函数，可以直接用`maain()`函数测试。
+
 # NOTE
 
 **超级无敌极品巨坑：**
@@ -163,6 +167,10 @@ __Checklist__:
 2. check if the number of views is equal to the number of valid data.
 3. check if each data of the view is calculated correctly.
 4. Update some Phone.IMEI to NULL, recheck if the view count is equal to the valid data count and verify if the calculation for each data in the view is correct.
+
+# PS
+
+The `main()` function in `main.py()` inherits all the necessary sub-functions to be executed, so you can directly use the `main()` function for testing.
 
 # NOTE
 
