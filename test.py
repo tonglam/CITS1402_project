@@ -49,7 +49,8 @@ def check_schema(conn, cursor):
                 assert row[5] == 1
             elif table == "PhoneModel" and col_name == "modelNumber":
                 assert row[5] == 1
-            elif table == "rentalContract" and (col_name == "customerId" or col_name == "IMEI" or col_name == "dateOut"):
+            elif table == "rentalContract" and (
+                    col_name == "customerId" or col_name == "IMEI" or col_name == "dateOut"):
                 assert row[5] > 0
             elif table == "Customer" and col_name == "customerId":
                 assert row[5] == 1
@@ -360,7 +361,7 @@ def check_trigger_result(conn, cursor):
         conn.commit()
         rows = cursor.fetchall()
         expect_rental_cost = rows[0][0] + rows[0][1] * (
-                datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days
+                (datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days + 1)
         assert rental_cost == expect_rental_cost, "trigger result error, expect rental cost is {}, actual rental cost is {}".format(
             expect_rental_cost, rental_cost)
 
@@ -418,7 +419,7 @@ def check_view(conn, cursor):
         rental_cost = x[4]
         model_name = x[5]
         # calculate rent days
-        rent_days = (datetime.strptime(date_back, "%Y-%m-%d") - datetime.strptime(date_out, "%Y-%m-%d")).days
+        rent_days = (datetime.strptime(date_back, "%Y-%m-%d") - datetime.strptime(date_out, "%Y-%m-%d")).days + 1
         # get tax year
         tax_year = get_tax_year(datetime.strptime(date_back, "%Y-%m-%d"))
         # summary data

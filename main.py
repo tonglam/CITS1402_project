@@ -14,7 +14,7 @@ def main():
     drop_database()
     create_database()
     fake_data()
-    # test()
+    test()
 
 
 if __name__ == '__main__':
