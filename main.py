@@ -18,5 +18,7 @@ def main():
 
 
 if __name__ == '__main__':
-    for i in range(500):
+    for i in range(100):
+        print("start test time: {}".format(i + 1))
         main()
+        print("finish test time: {}".format(i + 1))

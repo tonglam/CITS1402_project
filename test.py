@@ -31,7 +31,7 @@ def check_schema(conn, cursor):
     # get data_type from database
     for table in table_list:
         expected_data_dict = table_dict[table]
-        sql = "PRAGMA table_info({})".format(table)
+        sql = "PRAGMA table_info({});".format(table)
         cursor.execute(sql)
         conn.commit()
         rows = cursor.fetchall()
@@ -56,7 +56,7 @@ def check_schema(conn, cursor):
                 assert row[5] == 1
         # check foreign key
         if table == "Phone":
-            sql = "PRAGMA foreign_key_list({})".format(table)
+            sql = "PRAGMA foreign_key_list({});".format(table)
             cursor.execute(sql)
             conn.commit()
             rows = cursor.fetchall()
@@ -66,7 +66,7 @@ def check_schema(conn, cursor):
                 assert row[3] == "modelNumber" or row[3] == "modelName"
                 assert row[4] == "modelNumber" or row[4] == "modelName"
         if table == "rentalContract":
-            sql = "PRAGMA foreign_key_list({})".format(table)
+            sql = "PRAGMA foreign_key_list({});".format(table)
             cursor.execute(sql)
             conn.commit()
             rows = cursor.fetchall()
@@ -84,56 +84,56 @@ def check_schema(conn, cursor):
 
 def check_primary_key(conn, cursor):
     # check Phone primary key
-    cursor.execute('SELECT * FROM Phone')
+    cursor.execute('SELECT * FROM Phone;')
     conn.commit()
     phone_list = cursor.fetchall()
     phone_test = phone_list[14]
     try:
         cursor.execute('''
                        INSERT INTO Phone (modelNumber, modelName, IMEI)
-                       VALUES (?, ?, ?)
+                       VALUES (?, ?, ?);
                    ''', phone_test)
         conn.commit()
         raise Exception("test Phone primary key failed, same record should not be inserted")
     except sqlite3.Error:
         print('pass Phone primary key test')
     # check PhoneModel primary key
-    cursor.execute('SELECT * FROM PhoneModel')
+    cursor.execute('SELECT * FROM PhoneModel;')
     conn.commit()
     phone_model_list = cursor.fetchall()
     phone_model_test = phone_model_list[14]
     try:
         cursor.execute('''
                        INSERT INTO PhoneModel (modelNumber, modelName, storage, colour, baseCost, dailyCost)
-                       VALUES (?, ?, ?, ?, ?, ?)
+                       VALUES (?, ?, ?, ?, ?, ?);
                    ''', phone_model_test)
         conn.commit()
         raise Exception("test PhoneModel primary key failed, same record should not be inserted")
     except sqlite3.Error:
         print('pass PhoneModel primary key test')
     # check rentalContract primary key
-    cursor.execute('SELECT * FROM rentalContract')
+    cursor.execute('SELECT * FROM rentalContract;')
     conn.commit()
     rental_contract_list = cursor.fetchall()
     rental_contract_test = rental_contract_list[14]
     try:
         cursor.execute('''
                        INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                       VALUES (?, ?, ?, ?, ?)
+                       VALUES (?, ?, ?, ?, ?);
                    ''', rental_contract_test)
         conn.commit()
         raise Exception("test rentalContract primary key failed, same record should not be inserted")
     except sqlite3.Error:
         print('pass rentalContract primary key test')
     # check Customer primary key
-    cursor.execute('SELECT * FROM Customer')
+    cursor.execute('SELECT * FROM Customer;')
     conn.commit()
     customer_list = cursor.fetchall()
     customer_test = customer_list[14]
     try:
         cursor.execute('''
                        INSERT INTO Customer (customerId, customerName, customerEmail)
-                       VALUES (?, ?, ?)
+                       VALUES (?, ?, ?);
                    ''', customer_test)
         conn.commit()
         raise Exception("test Customer primary key failed, same record should not be inserted")
@@ -145,15 +145,15 @@ def check_foreign_key(conn, cursor):
     # open foreign key setting, this will only be activated in the current connection
     foreign_key_flag = False
     while not foreign_key_flag:
-        cursor.execute("PRAGMA foreign_keys")
+        cursor.execute("PRAGMA foreign_keys;")
         conn.commit()
         if cursor.fetchall()[0][0]:
             foreign_key_flag = True
         else:
-            cursor.execute("PRAGMA foreign_keys = ON")
+            cursor.execute("PRAGMA foreign_keys = ON;")
             conn.commit()
     # check Phone foreign key
-    cursor.execute('SELECT * FROM Phone')
+    cursor.execute('SELECT * FROM Phone;')
     conn.commit()
     phone_list = cursor.fetchall()
     new_imei = generate_imei()
@@ -163,7 +163,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                           INSERT INTO Phone (modelNumber, modelName, IMEI)
-                          VALUES (?, ?, ?)
+                          VALUES (?, ?, ?);
                       ''', phone_test)
         conn.commit()
         raise Exception("test Phone foreign key failed, record should not be inserted")
@@ -175,7 +175,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                          INSERT INTO Phone (modelNumber, modelName, IMEI)
-                         VALUES (?, ?, ?)
+                         VALUES (?, ?, ?);
                      ''', phone_test)
         conn.commit()
         raise Exception("test Phone foreign key failed, record should not be inserted")
@@ -187,7 +187,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                         INSERT INTO Phone (modelNumber, modelName, IMEI)
-                        VALUES (?, ?, ?)
+                        VALUES (?, ?, ?);
                     ''', phone_test)
         conn.commit()
         raise Exception("test Phone foreign key failed, record should not be inserted")
@@ -195,7 +195,7 @@ def check_foreign_key(conn, cursor):
         print('pass Phone foreign key test 3:' + str(e))
 
     # check rentalContract foreign key
-    cursor.execute('SELECT * FROM rentalContract')
+    cursor.execute('SELECT * FROM rentalContract;')
     conn.commit()
     contract_list = cursor.fetchall()
     new_imei = generate_imei()
@@ -211,7 +211,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                        INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                       VALUES (?, ?, ?, ?, ?)
+                       VALUES (?, ?, ?, ?, ?);
                     ''', contract_test)
         conn.commit()
         raise Exception("test rentalContract foreign key failed, record should not be inserted")
@@ -229,7 +229,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                           INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                          VALUES (?, ?, ?, ?, ?)
+                          VALUES (?, ?, ?, ?, ?);
                        ''', contract_test)
         conn.commit()
         raise Exception("test rentalContract foreign key failed, record should not be inserted")
@@ -247,7 +247,7 @@ def check_foreign_key(conn, cursor):
     try:
         cursor.execute('''
                              INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                             VALUES (?, ?, ?, ?, ?)
+                             VALUES (?, ?, ?, ?, ?);
                           ''', contract_test)
         conn.commit()
         raise Exception("test rentalContract foreign key failed, record should not be inserted")
@@ -256,7 +256,7 @@ def check_foreign_key(conn, cursor):
 
 
 def check_key_constraints(conn, cursor):
-    cursor.execute('SELECT * FROM Phone')
+    cursor.execute('SELECT * FROM Phone;')
     conn.commit()
     phone_list = cursor.fetchall()
     imei = phone_list[7][2]
@@ -268,7 +268,7 @@ def check_key_constraints(conn, cursor):
     try:
         cursor.execute('''
                        INSERT INTO Phone (modelNumber, modelName, IMEI)
-                       VALUES (?, ?, ?)
+                       VALUES (?, ?, ?);
                        ''', phone_test)
         conn.commit()
         raise Exception("test Phone key constraints failed, record should not be inserted")
@@ -282,7 +282,7 @@ def check_key_constraints(conn, cursor):
     try:
         cursor.execute('''
                            INSERT INTO Phone (modelNumber, modelName, IMEI)
-                           VALUES (?, ?, ?)
+                           VALUES (?, ?, ?);
                            ''', phone_test)
         conn.commit()
         raise Exception("test Phone key constraints failed, record should not be inserted")
@@ -296,7 +296,7 @@ def check_key_constraints(conn, cursor):
     try:
         cursor.execute('''
                               INSERT INTO Phone (modelNumber, modelName, IMEI)
-                              VALUES (?, ?, ?)
+                              VALUES (?, ?, ?);
                               ''', phone_test)
         conn.commit()
         raise Exception("test Phone key constraints failed, record should not be inserted")
@@ -305,7 +305,7 @@ def check_key_constraints(conn, cursor):
 
 
 def check_trigger_exists(conn, cursor):
-    cursor.execute("SELECT count(1) FROM sqlite_master WHERE type='trigger' AND tbl_name = 'rentalContract' ")
+    cursor.execute("SELECT count(1) FROM sqlite_master WHERE type='trigger' AND tbl_name = 'rentalContract';")
     conn.commit()
     rows = cursor.fetchall()
     # this program has set up a trigger for rentalContract table
@@ -313,7 +313,7 @@ def check_trigger_exists(conn, cursor):
 
 
 def trigger_rental_cost(conn, cursor, number=1):
-    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NULL')
+    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NULL;')
     rental_contract_list = cursor.fetchall()
     for i in range(number):
         sample = random.sample(range(len(rental_contract_list)), number)[0]
@@ -334,7 +334,7 @@ def trigger_rental_one_cost(conn, cursor, rental_contract):
         None
     )
     print("Trigger test data:{}".format(trigger_test.__str__()))
-    cursor.execute("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND rentalCost IS NULL ",
+    cursor.execute("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND rentalCost IS NULL;",
                    (date_back, customer_id, imei))
     conn.commit()
     # check result
@@ -343,11 +343,11 @@ def trigger_rental_one_cost(conn, cursor, rental_contract):
 
 def check_trigger_result(conn, cursor):
     # check trigger times
-    cursor.execute("SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL ")
+    cursor.execute("SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL;")
     conn.commit()
     rental_list = cursor.fetchall()
     rental_count = len(rental_list)
-    cursor.execute("SELECT count(1) FROM trigger_monitor ")
+    cursor.execute("SELECT count(1) FROM trigger_monitor;")
     conn.commit()
     monitor_count = cursor.fetchall()[0][0]
     assert rental_count == monitor_count, "trigger times error, check the record manually to find out why"
@@ -356,7 +356,7 @@ def check_trigger_result(conn, cursor):
         imei = x[1]
         rental_cost = x[4]
         cursor.execute(
-            "SELECT b.baseCost, b.dailyCost FROM Phone a JOIN PhoneModel b USING (modelNumber, modelName) WHERE IMEI = ? ",
+            "SELECT b.baseCost, b.dailyCost FROM Phone a JOIN PhoneModel b USING (modelNumber, modelName) WHERE IMEI = ?;",
             (imei,))
         conn.commit()
         rows = cursor.fetchall()
@@ -367,7 +367,7 @@ def check_trigger_result(conn, cursor):
 
 
 def trigger_duplicate_rental_cost(conn, cursor):
-    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL')
+    cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL;')
     conn.commit()
     rental_contract_all_list = cursor.fetchall()
     rental_contract_key_set = set([str(x[0]) + "+" + x[1] for x in rental_contract_all_list])
@@ -388,7 +388,7 @@ def trigger_duplicate_rental_cost(conn, cursor):
     # insert
     cursor.executemany('''
                        INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                       VALUES (?, ?, ?, ?, ?)
+                       VALUES (?, ?, ?, ?, ?);
                    ''', duplicate_list)
     conn.commit()
     # update
@@ -398,7 +398,7 @@ def trigger_duplicate_rental_cost(conn, cursor):
         date_out = x[2]
         rent_day = random.randint(1, 100)
         date_back = (datetime.strptime(date_out, "%Y-%m-%d") + timedelta(days=rent_day)).strftime("%Y-%m-%d")
-        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ?",
+        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ?;",
                       (date_back, customer_id, imei))
         conn.commit()
 
@@ -406,8 +406,8 @@ def trigger_duplicate_rental_cost(conn, cursor):
 def check_view(conn, cursor):
     # select all valid rental contract records
     cursor.execute('''
-                    SELECT a.*, b.modelName FROM rentalContract a, Phone b 
-                    WHERE a.IMEI = b.IMEI AND a.dateBack IS NOT NULL
+                    SELECT a.*, b.modelName FROM rentalContract a LEFT JOIN Phone b USING (IMEI)
+                    WHERE a.dateBack IS NOT NULL;
                     ''')
     conn.commit()
     summary_dict = {}
@@ -450,7 +450,7 @@ def check_view(conn, cursor):
         else:
             summary_dict[key] = x
     # get data from view
-    cursor.execute("SELECT * FROM customerSummary")
+    cursor.execute("SELECT * FROM customerSummary;")
     view_list = cursor.fetchall()
     # check length
     assert len(summary_dict) == len(
@@ -476,6 +476,103 @@ def check_view(conn, cursor):
         assert round(summary.rentalCost, 2) == x[
             4], "view data rentalCost error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
             key, summary.rentalCost, x[4])
+
+
+def check_null_imei_view(conn, cursor):
+    set_null_imei(conn, cursor)
+    # I know the queries below could be extracted as a function here, but I am lazy baby
+    cursor.execute('''
+                        SELECT a.*, b.modelName FROM rentalContract a LEFT JOIN Phone b USING (IMEI)
+                        WHERE a.dateBack IS NOT NULL;
+                        ''')
+    conn.commit()
+    summary_null_dict = {}
+    valid_null_list = []
+    for x in cursor.fetchall():
+        customer_id = x[0]
+        date_out = x[2]
+        date_back = x[3]
+        rental_cost = x[4]
+        model_name = x[5]
+        # calculate rent days
+        rent_days = (datetime.strptime(date_back, "%Y-%m-%d") - datetime.strptime(date_out, "%Y-%m-%d")).days + 1
+        # get tax year
+        tax_year = get_tax_year(datetime.strptime(date_back, "%Y-%m-%d"))
+        # summary data
+        customer_summary = CustomerSummary(
+            customer_id,
+            model_name,
+            date_out,
+            date_back,
+            rent_days,
+            tax_year,
+            rental_cost
+        )
+        valid_null_list.append(customer_summary)
+    for x in valid_null_list:
+        model_name = x.modelName if x.modelName is not None else "NULL"
+        key = str(x.customerId) + '+' + model_name + "+" + x.taxYear
+        if key in summary_null_dict:
+            old = summary_null_dict[key]
+            new = CustomerSummary(
+                x.customerId,
+                model_name,
+                x.dateOut,
+                x.dateBack,
+                old.daysRented + x.daysRented,
+                x.taxYear,
+                (old.rentalCost * 100 + x.rentalCost * 100) / 100
+            )
+            summary_null_dict[key] = new
+        else:
+            summary_null_dict[key] = x
+        # get data from view
+    cursor.execute("SELECT * FROM customerSummary;")
+    view_null_list = cursor.fetchall()
+    # check length
+    assert len(summary_null_dict) == len(
+        view_null_list), "view data error, expected len:[{}], actual len:[{}], check the record manually to find out why".format(
+        len(summary_null_dict), len(view_null_list))
+    # check data
+    for x in view_null_list:
+        model_name = x[1] if x[1] is not None else "NULL"
+        key = str(x[0]) + '+' + model_name + '+' + x[3]
+        summary = summary_null_dict[key]
+        print("view test data:{}".format(summary.__str__()))
+        assert summary.customerId == x[
+            0], "view data customerId error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.customerId, x[0])
+        if model_name != "NULL":
+            assert summary.modelName == x[
+                1], "view data modelName error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+                key, summary.modelName, x[1])
+        assert summary.daysRented == x[
+            2], "view data days rented error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.daysRented, x[2])
+        assert summary.taxYear == x[
+            3], "view data taxYear error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.taxYear, x[3])
+        assert round(summary.rentalCost, 2) == x[
+            4], "view data rentalCost error, key:[{}], expected:[{}], actual:[{}], check the record manually to find out why".format(
+            key, summary.rentalCost, x[4])
+
+
+def set_null_imei(conn, cursor):
+    # check null
+    cursor.execute("SELECT count(1) FROM rentalContract WHERE IMEI IS NULL;")
+    if cursor.fetchall()[0][0] > 0:
+        return
+    # set some phone imei to be null
+    cursor.execute("SELECT * FROM CustomerSummaryBreakDown;")
+    conn.commit()
+    break_down_list = cursor.fetchall()
+    sample_data = random.choices([(x[0], x[1]) for x in break_down_list], k=10)
+    for sample in sample_data:
+        cursor.execute("UPDATE rentalContract SET IMEI = NULL WHERE customerId = ? AND IMEI = ?;",
+                       (sample[0], sample[1]))
+        conn.commit()
+    cursor.execute("SELECT * FROM CustomerSummary;")
+    conn.commit()
 
 
 def get_tax_year(date):
@@ -531,11 +628,21 @@ def test_view():
     conn.close()
 
 
+def test_null_imei_view():
+    conn = sqlite3.connect(constants.database_name)
+    cursor = conn.cursor()
+    set_null_imei(conn, cursor)
+    check_null_imei_view(conn, cursor)
+    cursor.close()
+    conn.close()
+
+
 def test():
     print('\nstart 1402 project test\n')
     test_schema()
     test_data()
     test_trigger()
     test_view()
+    test_null_imei_view()
     print('\nCongratulations!!!!\n')
     print('pass 1402 project test\n')

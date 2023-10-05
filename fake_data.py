@@ -22,10 +22,10 @@ def customer_data(conn, cursor):
         customer = Customer(i + 1, fake.name(), fake.email())
         customer_list.append(customer.__str__())
     try:
-        cursor.execute("DELETE FROM Customer")
+        cursor.execute("DELETE FROM Customer;")
         cursor.executemany('''
             INSERT INTO Customer (customerId, customerName, customerEmail)
-            VALUES (?, ?, ?)
+            VALUES (?, ?, ?);
         ''', customer_list)
         conn.commit()
     except sqlite3.Error as e:
@@ -52,10 +52,10 @@ def read_phone_model():
 
 def phone_model_data(conn, cursor, phone_models_list):
     try:
-        cursor.execute("DELETE FROM PhoneModel")
+        cursor.execute("DELETE FROM PhoneModel;")
         cursor.executemany('''
             INSERT INTO PhoneModel (modelNumber, modelName, storage, colour, baseCost, dailyCost)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?);
         ''', phone_models_list)
         conn.commit()
     except sqlite3.Error as e:
@@ -87,10 +87,10 @@ def phone_data(conn, cursor):
             )
             phone_list.append(phone.__str__())
     try:
-        cursor.execute("DELETE FROM Phone")
+        cursor.execute("DELETE FROM Phone;")
         cursor.executemany('''
             INSERT INTO Phone (modelNumber, modelName, IMEI)
-            VALUES (?, ?, ?)
+            VALUES (?, ?, ?);
         ''', phone_list)
         conn.commit()
     except sqlite3.Error as e:
@@ -98,9 +98,9 @@ def phone_data(conn, cursor):
 
 
 def rental_contract_data(conn, cursor):
-    cursor.execute('SELECT imei FROM Phone')
+    cursor.execute('SELECT imei FROM Phone;')
     imei_list = [row[0] for row in cursor.fetchall()]
-    cursor.execute('SELECT customerId FROM Customer')
+    cursor.execute('SELECT customerId FROM Customer;')
     conn.commit()
     customer_list = [row[0] for row in cursor.fetchall()]
     rental_contract_list = []
@@ -125,11 +125,11 @@ def rental_contract_data(conn, cursor):
         sample_rental_contract = rental_contract_list[sample_index]
         sample_customer_id = sample_rental_contract[0]
         sample_imei = sample_rental_contract[1]
-        cursor.execute("SELECT * FROM Phone WHERE IMEI = ?", (sample_imei,))
+        cursor.execute("SELECT * FROM Phone WHERE IMEI = ?;", (sample_imei,))
         conn.commit()
         sample_phone = cursor.fetchone()
         model_name = sample_phone[1]
-        cursor.execute("SELECT IMEI FROM Phone WHERE modelName = ? AND IMEI != ?", (model_name, sample_imei))
+        cursor.execute("SELECT IMEI FROM Phone WHERE modelName = ? AND IMEI != ?;", (model_name, sample_imei))
         conn.commit()
         other_imei_list = [row[0] for row in cursor.fetchall()]
         for other in other_imei_list:
@@ -146,10 +146,10 @@ def rental_contract_data(conn, cursor):
             )
             rental_contract_list.append(rental_contract.__str__())
     try:
-        cursor.execute("DELETE FROM rentalContract")
+        cursor.execute("DELETE FROM rentalContract;")
         cursor.executemany('''
                     INSERT INTO rentalContract (customerId, IMEI, dateOut, dateBack, rentalCost)
-                    VALUES (?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?);
                 ''', rental_contract_list)
         conn.commit()
     except sqlite3.Error as e:

@@ -36,32 +36,33 @@ def create_database():
 
 def create_trigger_monitor(conn, cursor):
     # create a trigger_monitor table
-    cursor.execute("DROP TABLE IF EXISTS trigger_monitor")
+    cursor.execute("DROP TABLE IF EXISTS trigger_monitor;")
     cursor.execute('''
         CREATE TABLE trigger_monitor (
             trigger_name TEXT,
             trigger_time TEXT
-        )
+        );
     ''')
     conn.commit()
     # create a trigger_monitor trigger
-    cursor.execute("DROP TRIGGER IF EXISTS trigger_monitor")
+    cursor.execute("DROP TRIGGER IF EXISTS trigger_monitor;")
     cursor.execute('''
         CREATE TRIGGER trigger_monitor
         AFTER UPDATE OF rentalCost ON rentalContract
         BEGIN
             INSERT INTO trigger_monitor (trigger_name, trigger_time)
             VALUES ('trigger_monitor', datetime('now'));
-        END
+        END;
     ''')
     conn.commit()
     # create a customer_summary_breakdown view
-    cursor.execute("DROP VIEW IF EXISTS CustomerSummaryBreakdown")
+    cursor.execute("DROP VIEW IF EXISTS CustomerSummaryBreakdown;")
     cursor.execute('''
         CREATE VIEW CustomerSummaryBreakDown AS
         SELECT
         a.customerId,
-        c.modelName,
+        a.IMEI,
+        b.modelName,
         a.dateOut,
         a.dateBack,
         julianday(a.dateBack) - julianday(a.dateOut) as julianday,
@@ -73,9 +74,8 @@ def create_trigger_monitor(conn, cursor):
            END                                      as taxYear,
        a.rentalCost                            as rentalCost
        FROM rentalContract a
-       JOIN Phone b USING (IMEI)
-       JOIN PhoneModel c USING (modelNumber)
+       LEFT JOIN Phone b USING (IMEI)
        WHERE a.dateBack IS NOT NULL
-       ORDER BY a.customerId, c.modelName, taxYear;
+       ORDER BY a.customerId, b.modelName, taxYear;
     ''')
     conn.commit()
