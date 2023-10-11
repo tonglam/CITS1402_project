@@ -1,6 +1,5 @@
 import random
 import sqlite3
-import pytest
 
 import constants
 from tools.imei import generate_imei
@@ -85,7 +84,6 @@ def check_schema(conn, cursor):
 def check_primary_key(conn, cursor):
     # check Phone primary key
     cursor.execute('SELECT * FROM Phone;')
-    conn.commit()
     phone_list = cursor.fetchall()
     phone_test = phone_list[14]
     try:
@@ -99,7 +97,6 @@ def check_primary_key(conn, cursor):
         print('pass Phone primary key test')
     # check PhoneModel primary key
     cursor.execute('SELECT * FROM PhoneModel;')
-    conn.commit()
     phone_model_list = cursor.fetchall()
     phone_model_test = phone_model_list[14]
     try:
@@ -113,7 +110,6 @@ def check_primary_key(conn, cursor):
         print('pass PhoneModel primary key test')
     # check rentalContract primary key
     cursor.execute('SELECT * FROM rentalContract;')
-    conn.commit()
     rental_contract_list = cursor.fetchall()
     rental_contract_test = rental_contract_list[14]
     try:
@@ -127,7 +123,6 @@ def check_primary_key(conn, cursor):
         print('pass rentalContract primary key test')
     # check Customer primary key
     cursor.execute('SELECT * FROM Customer;')
-    conn.commit()
     customer_list = cursor.fetchall()
     customer_test = customer_list[14]
     try:
@@ -154,7 +149,6 @@ def check_foreign_key(conn, cursor):
             conn.commit()
     # check Phone foreign key
     cursor.execute('SELECT * FROM Phone;')
-    conn.commit()
     phone_list = cursor.fetchall()
     new_imei = generate_imei()
 
@@ -196,7 +190,6 @@ def check_foreign_key(conn, cursor):
 
     # check rentalContract foreign key
     cursor.execute('SELECT * FROM rentalContract;')
-    conn.commit()
     contract_list = cursor.fetchall()
     new_imei = generate_imei()
 
@@ -257,7 +250,6 @@ def check_foreign_key(conn, cursor):
 
 def check_key_constraints(conn, cursor):
     cursor.execute('SELECT * FROM Phone;')
-    conn.commit()
     phone_list = cursor.fetchall()
     imei = phone_list[7][2]
 
@@ -304,9 +296,8 @@ def check_key_constraints(conn, cursor):
         print('pass Phone key constraints test 3:' + str(e))
 
 
-def check_trigger_exists(conn, cursor):
+def check_trigger_exists(cursor):
     cursor.execute("SELECT count(1) FROM sqlite_master WHERE type='trigger' AND tbl_name = 'rentalContract';")
-    conn.commit()
     rows = cursor.fetchall()
     # this program has set up a trigger for rentalContract table
     assert rows[0][0] > 1, "trigger does not exist"
@@ -334,7 +325,7 @@ def trigger_rental_one_cost(conn, cursor, rental_contract):
         None
     )
     print("Trigger test data:{}".format(trigger_test.__str__()))
-    cursor.execute("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND rentalCost IS NULL;",
+    cursor.execute("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND dateBack IS NULL;",
                    (date_back, customer_id, imei))
     conn.commit()
     # check result
@@ -344,7 +335,6 @@ def trigger_rental_one_cost(conn, cursor, rental_contract):
 def check_trigger_result(conn, cursor):
     # check trigger times
     cursor.execute("SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL;")
-    conn.commit()
     rental_list = cursor.fetchall()
     rental_count = len(rental_list)
     cursor.execute("SELECT count(1) FROM trigger_monitor;")
@@ -358,7 +348,6 @@ def check_trigger_result(conn, cursor):
         cursor.execute(
             "SELECT b.baseCost, b.dailyCost FROM Phone a JOIN PhoneModel b USING (modelNumber, modelName) WHERE IMEI = ?;",
             (imei,))
-        conn.commit()
         rows = cursor.fetchall()
         expect_rental_cost = round(rows[0][0] + rows[0][1] * (
                 (datetime.strptime(x[3], "%Y-%m-%d") - datetime.strptime(x[2], "%Y-%m-%d")).days + 1), 2)
@@ -368,7 +357,6 @@ def check_trigger_result(conn, cursor):
 
 def trigger_duplicate_rental_cost(conn, cursor):
     cursor.execute('SELECT * FROM rentalContract WHERE rentalCost IS NOT NULL;')
-    conn.commit()
     rental_contract_all_list = cursor.fetchall()
     rental_contract_key_set = set([str(x[0]) + "+" + x[1] for x in rental_contract_all_list])
     sample_index = random.sample(range(len(rental_contract_all_list)), 30)
@@ -392,24 +380,43 @@ def trigger_duplicate_rental_cost(conn, cursor):
                    ''', duplicate_list)
     conn.commit()
     # update
+    key_set = set()
     for x in duplicate_list:
         customer_id = x[0]
         imei = x[1]
         date_out = x[2]
+        key = str(customer_id) + "+" + imei + "+ " + date_out
+        key_set.add(key)
         rent_day = random.randint(1, 100)
         date_back = (datetime.strptime(date_out, "%Y-%m-%d") + timedelta(days=rent_day)).strftime("%Y-%m-%d")
-        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ?;",
-                      (date_back, customer_id, imei))
+        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND dateOut = ?;",
+                      (date_back, customer_id, imei, date_out))
         conn.commit()
+    # update exists dateBack
+    cursor.execute('SELECT count(1) FROM trigger_monitor;')
+    previous_count = cursor.fetchall()[0][0]
+    for x in key_set:
+        key_list = x.split("+")
+        customer_id = key_list[0]
+        imei = key_list[1]
+        date_out = key_list[2]
+        rent_day = random.randint(1, 100)
+        date_back = (datetime.strptime(date_out, "%Y-%m-%d") + timedelta(days=rent_day)).strftime("%Y-%m-%d")
+        cursor.execut("UPDATE rentalContract SET dateBack = ? WHERE customerId = ? AND IMEI = ? AND dateOut = ?;",
+                      (date_back, customer_id, imei, date_out))
+        conn.commit()
+    # check result
+    cursor.execute('SELECT count(1) FROM trigger_monitor;')
+    new_count = cursor.fetchall()[0][0]
+    assert new_count == previous_count, "trigger run when dateBack is not null, check the record manually to find out why"
 
 
-def check_view(conn, cursor):
+def check_view(cursor):
     # select all valid rental contract records
     cursor.execute('''
                     SELECT a.*, b.modelName FROM rentalContract a LEFT JOIN Phone b USING (IMEI)
                     WHERE a.dateBack IS NOT NULL;
                     ''')
-    conn.commit()
     summary_dict = {}
     valid_list = []
     for x in cursor.fetchall():
@@ -485,7 +492,6 @@ def check_null_imei_view(conn, cursor):
                         SELECT a.*, b.modelName FROM rentalContract a LEFT JOIN Phone b USING (IMEI)
                         WHERE a.dateBack IS NOT NULL;
                         ''')
-    conn.commit()
     summary_null_dict = {}
     valid_null_list = []
     for x in cursor.fetchall():
@@ -564,15 +570,12 @@ def set_null_imei(conn, cursor):
         return
     # set some phone imei to be null
     cursor.execute("SELECT * FROM CustomerSummaryBreakDown;")
-    conn.commit()
     break_down_list = cursor.fetchall()
     sample_data = random.choices([(x[0], x[1]) for x in break_down_list], k=10)
     for sample in sample_data:
         cursor.execute("UPDATE rentalContract SET IMEI = NULL WHERE customerId = ? AND IMEI = ?;",
                        (sample[0], sample[1]))
         conn.commit()
-    cursor.execute("SELECT * FROM CustomerSummary;")
-    conn.commit()
 
 
 def get_tax_year(date):
@@ -609,7 +612,7 @@ def test_trigger():
     conn = sqlite3.connect(constants.database_name)
     cursor = conn.cursor()
     # check trigger exists
-    check_trigger_exists(conn, cursor)
+    check_trigger_exists(cursor)
     # trigger one record
     trigger_rental_cost(conn, cursor)
     # trigger 50 records
@@ -623,7 +626,7 @@ def test_trigger():
 def test_view():
     conn = sqlite3.connect(constants.database_name)
     cursor = conn.cursor()
-    check_view(conn, cursor)
+    check_view(cursor)
     cursor.close()
     conn.close()
 

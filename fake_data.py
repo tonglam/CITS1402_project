@@ -101,7 +101,6 @@ def rental_contract_data(conn, cursor):
     cursor.execute('SELECT imei FROM Phone;')
     imei_list = [row[0] for row in cursor.fetchall()]
     cursor.execute('SELECT customerId FROM Customer;')
-    conn.commit()
     customer_list = [row[0] for row in cursor.fetchall()]
     rental_contract_list = []
     ket_set = set()
@@ -126,11 +125,9 @@ def rental_contract_data(conn, cursor):
         sample_customer_id = sample_rental_contract[0]
         sample_imei = sample_rental_contract[1]
         cursor.execute("SELECT * FROM Phone WHERE IMEI = ?;", (sample_imei,))
-        conn.commit()
         sample_phone = cursor.fetchone()
         model_name = sample_phone[1]
         cursor.execute("SELECT IMEI FROM Phone WHERE modelName = ? AND IMEI != ?;", (model_name, sample_imei))
-        conn.commit()
         other_imei_list = [row[0] for row in cursor.fetchall()]
         for other in other_imei_list:
             key = str(sample_customer_id) + "+" + other
