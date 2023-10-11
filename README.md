@@ -76,7 +76,7 @@ __Checklist__：
 
 # PS
 
-`main.py`中的`main()`函数继承了所有需要执行的子函数，可以直接用`maain()`函数测试。
+`main.py`中的`main()`函数继承了所有需要执行的子函数，可以直接用`main()`函数测试。
 
 # NOTE
 
