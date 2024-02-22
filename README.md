@@ -93,7 +93,7 @@ PRAGMA foreign_keys = ON;
 PRAGMA foreign_keys;
 ```
 ----
-# 1402-sqlite-project Test Usage Method
+# CITS1402-sqlite-project Test Usage Method
 
 # Step 1 - Replace Files
 
