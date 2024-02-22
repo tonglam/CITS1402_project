@@ -1,4 +1,4 @@
-# 1402-sqlite-project 测试食用方法
+# CITS1402-sqlite-project 测试食用方法
 
 # Step 1 - Replace Files
 
